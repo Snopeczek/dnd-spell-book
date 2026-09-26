@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DnD Spell Book</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+<!-- build:styles -->
+<link rel="stylesheet" href="styles.css">
+<!-- /build:styles -->
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <h1>DnD Spell Book</h1>
+  </div>
+  <div class="ver-switch" role="radiogroup" aria-label="Wersja zasad">
+    <button type="button" role="radio" data-ver="2014">2014</button>
+    <button type="button" role="radio" data-ver="2024">2024</button>
+  </div>
+</header>
+<nav id="case" class="case-wrap" aria-label="Regał z księgami"></nav>
+<main>
+  <div id="bookhead"></div>
+  <div id="view"></div>
+</main>
+<footer class="attrib" id="attrib"></footer>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<dialog id="dlg"></dialog>
+
+<!-- build:data -->
+<script src="data/load-dev.js"></script>
+<!-- /build:data -->
+<!-- build:scripts -->
+<script src="js/01-util.js"></script>
+<script src="js/02-data.js"></script>
+<script src="js/03-state.js"></script>
+<script src="js/04-spellcard.js"></script>
+<script src="js/05-classbook.js"></script>
+<script src="js/06-compendium.js"></script>
+<script src="js/07-book.js"></script>
+<script src="js/08-homebrew.js"></script>
+<script src="js/09-classes.js"></script>
+<script src="js/10-settings.js"></script>
+<script src="js/11-bookcase.js"></script>
+<script src="js/12-drag.js"></script>
+<script src="js/13-app.js"></script>
+<!-- /build:scripts -->
+</body>
+</html>

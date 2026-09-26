@@ -1,0 +1,22 @@
+# build output (the live site is built automatically by GitHub Actions)
+dist/
+_site/
+
+# packaged builds go to GitHub Releases, not into the repo
+*.zip
+
+# personal import files may contain non-SRD content: never commit them
+pliki-importu/
+*import*.json
+!tests/fixtures/*.json
+
+# Python
+__pycache__/
+*.pyc
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

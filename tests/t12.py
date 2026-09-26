@@ -1,0 +1,67 @@
+import asyncio, json
+from playwright.async_api import async_playwright
+from pathlib import Path
+URL=(Path(__file__).resolve().parents[1]/"dist"/"DnD Spell Book.html").as_uri()
+FIX=Path(__file__).resolve().parent/"fixtures"
+import tempfile; SHOTS=Path(tempfile.gettempdir())/"spellbook-tests"; SHOTS.mkdir(exist_ok=True)
+def ok(c,m): print(('OK  ' if c else 'FAIL'),m)
+async def main():
+    async with async_playwright() as p:
+        b=await p.chromium.launch()
+        pg=await (await b.new_context(viewport={'width':1360,'height':900},reduced_motion='reduce')).new_page()
+        errs=[]; pg.on('pageerror',lambda e:errs.append(str(e)))
+        await pg.goto(URL); await pg.wait_for_timeout(300)
+        shelves=lambda: pg.evaluate("[...document.querySelectorAll('.shelf')].map(s=>[...s.querySelectorAll('.spine')].map(x=>x.dataset.key.split(':')[0]))")
+        # 9 postaci -> nadal 2 półki
+        for i in range(9):
+            await pg.click('.spine[data-key="newchar:"]'); await pg.wait_for_timeout(60); await pg.click('[data-home]'); await pg.wait_for_timeout(40)
+        sh=await shelves(); print([len(r) for r in sh])
+        ok(len(sh)==2 and sh[1].count('char')==9 and sh[1][-3:]==['newchar','homebrew','settings'],'9 postaci: dwie półki, Nowa postać na dolnej')
+        # 10. postać -> nowa półka z samą „Nową postacią”
+        await pg.click('.spine[data-key="newchar:"]'); await pg.wait_for_timeout(60); await pg.click('[data-home]'); await pg.wait_for_timeout(60)
+        sh=await shelves(); print([r for r in sh[1:]])
+        ok(len(sh)==3 and sh[1].count('char')==10 and sh[1][-2:]==['homebrew','settings'] and sh[2]==['newchar'],'10 postaci: pojawia się trzecia półka z pustą księgą')
+        await pg.click('.spine[data-key="newchar:"]'); await pg.wait_for_timeout(60); await pg.click('[data-home]'); await pg.wait_for_timeout(60)
+        sh=await shelves()
+        ok(sh[2]==['char','newchar'],'11. postać stoi na trzeciej półce')
+        lean=await pg.evaluate("[...document.querySelectorAll('.spine.lean')].map(x=>x.dataset.key.split(':')[0])")
+        ok(lean==['class','settings'],'oparte księgi: ostatnia klasa i Ustawienia; pusta księga stoi prosto')
+        await pg.screenshot(path=str(SHOTS/'s12.png'), full_page=True)
+        # usunięcie postaci -> półka znika
+        cid=await pg.evaluate("document.querySelectorAll('.shelf')[2].querySelector('.spine').dataset.key.split(':')[1]")
+        await pg.click(f'.spine[data-key="char:{cid}"]'); await pg.wait_for_timeout(80); await pg.click('[data-del]'); await pg.wait_for_timeout(150)
+        ok(len(await shelves())==3 and (await shelves())[2]==['newchar'],'po usunięciu 11. postaci: trzecia półka z samą pustą księgą')
+        # zakładki w księdze klasy
+        await pg.click('.spine[data-key="class:wizard"]'); await pg.wait_for_timeout(150)
+        ok(await pg.locator('.openbook .bm').count()==11 and await pg.locator('.vol').count()==0,'księga klasy: Wstążki + 10 zakładek')
+        await pg.click('.bm[data-lv="5"]'); await pg.wait_for_timeout(100)
+        ok(await pg.locator('.bm[aria-selected=true]').get_attribute('data-lv')=='5' and 'Poziom 5' in await pg.inner_text('.page.listcol h3'),'kliknięcie zakładki 5')
+        ok(await pg.locator('.pages > .page').count()==2,'rozkładówka: dwie strony')
+        await pg.click('.spine[data-key="char:'+json.loads(await pg.evaluate("localStorage.getItem('dndsb:ver:2024')"))['chars'][0]['id']+'"]'); await pg.wait_for_timeout(120)
+        ok(await pg.locator('.charbook .openbook .pages > .page').count()==2 and await pg.locator('.charbook .bm').count()==12,'char: rozkładówka z kartą postaci, Wstążkami i 10 zakładkami poziomów')
+        await pg.click('.spine[data-key="homebrew:"]'); await pg.wait_for_timeout(120)
+        ok(await pg.locator('.hbbook .openbook .pages > .page').count()==2,'homebrew: rozkładówka z zakładkami')
+        await pg.click('.spine[data-key="settings:"]'); await pg.wait_for_timeout(120)
+        ok(await pg.locator('.openbook.single .pages.single #page').count()==1,'settings: strona w ramie okładki')
+        # dane
+        await pg.click('.spine[data-key="compendium:"]'); await pg.wait_for_timeout(150)
+        await pg.fill('#q','Guidance'); await pg.wait_for_timeout(300); await pg.locator('#list .spell-row').first.click(); await pg.wait_for_timeout(100)
+        t=await pg.inner_text('#detail'); ok('Touch' in t and 'Component' not in t and 'V, S' in t,'Guidance 2024: poprawny zasięg i komponenty')
+        print('BŁĘDY JS:',errs)
+        # animacja (bez ograniczenia ruchu)
+        a=await (await b.new_context(viewport={'width':1360,'height':900})).new_page()
+        aerr=[]; a.on('pageerror',lambda e:aerr.append(str(e)))
+        await a.goto(URL); await a.wait_for_timeout(300)
+        await a.click('.spine[data-key="class:bard"]'); await a.wait_for_timeout(250)
+        ok(await a.locator('.open-anim .oa-book').count()==1 and await a.locator('.open-anim .oa-title').inner_text()=='Bard','animacja: kopia księgi z tytułem Bard')
+        ok((json.loads(await a.evaluate("localStorage.getItem('dndsb:app')") or '{}')).get('open') is None,'w trakcie wysuwania księga jeszcze nie otwarta')
+        await a.click('.spine[data-key="class:druid"]', force=True); await a.wait_for_timeout(100)
+        await a.wait_for_timeout(1600)
+        ok(await a.locator('.open-anim').count()==0,'animacja sprząta po sobie')
+        ok(json.loads(await a.evaluate("localStorage.getItem('dndsb:app')"))['open']=={'kind':'class','id':'bard'},'po animacji otwarta księga Bard (klik w trakcie ignorowany)')
+        await a.click('.spine[data-key="class:bard"]'); await a.wait_for_timeout(150)
+        ok(await a.locator('.open-anim').count()==1,'odkładanie z animacją')
+        await a.wait_for_timeout(1700)
+        ok(json.loads(await a.evaluate("localStorage.getItem('dndsb:app')"))['open'] is None and await a.locator('.open-anim').count()==0,'po odłożeniu: regał, nakładka usunięta')
+        print('BŁĘDY JS (animacja):',aerr); await b.close()
+asyncio.run(main())

@@ -1,0 +1,41 @@
+{
+ "app": "dnd-spell-book",
+ "format": 1,
+ "exported": "2026-01-01T00:00:00",
+ "versions": {
+  "2014": {
+   "chars": [],
+   "homebrew": [
+    {
+     "id": "hb-imp-pocket-spark",
+     "hb": true,
+     "n": "Pocket Spark",
+     "l": 0,
+     "s": "Evocation",
+     "c": [],
+     "ct": "1 action",
+     "r": "30 feet",
+     "cp": [
+      "V",
+      "S"
+     ],
+     "d": "Instantaneous",
+     "co": false,
+     "ri": false,
+     "x": [
+      "An invented test cantrip. A tiny spark leaps from your pocket toward a creature you can see within range."
+     ],
+     "keepTables": true,
+     "src": {
+      "dmgType": "",
+      "dmgBase": "",
+      "dmgInc": "",
+      "healBase": "",
+      "healInc": "",
+      "cantripScale": false
+     }
+    }
+   ]
+  }
+ }
+}

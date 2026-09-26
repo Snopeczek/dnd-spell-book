@@ -2,7 +2,7 @@
 
 A spellbook manager for Dungeons & Dragons 5e, built as a bookshelf of physical books. Every part of the app is a book on the shelf: pull one out and it opens into a two-page spread, with tabbed spell levels you flip through page by page.
 
-**[Open the live app](https://YOUR-USERNAME.github.io/dnd-spell-book/)**. Nothing to install; it runs entirely in the browser and works offline.
+**[Open the live app](https://Snopeczek.github.io/dnd-spell-book/)**. Nothing to install; it runs entirely in the browser and works offline.
 
 > The interface is currently in Polish. Spell names and descriptions are in English, as in the SRD.
 
